@@ -2,28 +2,34 @@
 #include "ESP8266Influxdb.h"
 #include <ESP8266WiFi.h>
 
+// comment below line to disable debug print 
+// #define DEBUG_PRINT(a) (Serial.println(a))
+
+#ifndef DEBUG_PRINT(a)
+#define DEBUG_PRINT(a)
+#endif
 
 Influxdb::Influxdb(const char* host, uint16_t port) {
   _port = port;
   _host = host;
 }
 
-DB_RESPOND Influxdb::opendb(String db, String user, String password) {
+DB_RESPONSE Influxdb::opendb(String db, String user, String password) {
   _db = "db=" + db + "&u=" + user + "&p=" + password;
 }
 
-DB_RESPOND Influxdb::opendb(String db) {
+DB_RESPONSE Influxdb::opendb(String db) {
   _db = "db=" + db;
 }
 
-DB_RESPOND Influxdb::write(FIELD data) {
+DB_RESPONSE Influxdb::write(FIELD data) {
   return this->write(data.postString());
 }
 
-DB_RESPOND Influxdb::write(String data) {
+DB_RESPONSE Influxdb::write(String data) {
 
   if (!_client.connect(_host, _port)) {
-    Serial.println("connection failed");
+    DEBUG_PRINT("connection failed");
     return DB_ERROR;
   }
 
@@ -33,16 +39,14 @@ DB_RESPOND Influxdb::write(String data) {
   postHead += "Content-Length: " + String(data.length()) + "\r\n\r\n";
 
   _client.print(postHead + data);
-  Serial.println(postHead + data);
+  DEBUG_PRINT(postHead + data);
 
 
   uint8_t t = 0;
-  static uint16_t c = 0;
   // Check the reply whether writing is success or not
   while (!_client.available() && t < 200) {
     delay(10); t++;
   }
-  Serial.println(c++);
   if (_client.available())
     return (_client.findUntil("204", "\r")) ? DB_SUCCESS : DB_ERROR;
   else
@@ -51,17 +55,17 @@ DB_RESPOND Influxdb::write(String data) {
 }
 
 
-DB_RESPOND Influxdb::query(String sql) {
+DB_RESPONSE Influxdb::query(String sql) {
 
   if (!_client.connect(_host, _port)) {
-    Serial.println("connection failed");
+    DEBUG_PRINT("connection failed");
     return DB_ERROR;
   }
 
   String url = "/query?pretty=true&" + _db;
   url += "&q=" + URLEncode(sql);
-  Serial.print("Requesting URL: ");
-  Serial.println(url);
+  DEBUG_PRINT("Requesting URL: ");
+  DEBUG_PRINT(url);
 
   // This will send the request to the server
   _client.print(String("GET ") + url + " HTTP/1.1\r\n" +

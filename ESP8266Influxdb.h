@@ -9,7 +9,7 @@ Written by HW Wong
 #include "Arduino.h"
 #include <ESP8266WiFi.h>
 
-enum DB_RESPOND {DB_SUCCESS, DB_ERROR};
+enum DB_RESPONSE {DB_SUCCESS, DB_ERROR};
 
 // Url encode function
 String URLEncode(String msg);
@@ -36,13 +36,13 @@ class Influxdb
   public:
     Influxdb(const char* host, uint16_t port);
 
-    DB_RESPOND opendb(String db);
-    DB_RESPOND opendb(String db, String user, String password);
+    DB_RESPONSE opendb(String db);
+    DB_RESPONSE opendb(String db, String user, String password);
 
-    DB_RESPOND write(FIELD data);
-    DB_RESPOND write(String data);
+    DB_RESPONSE write(FIELD data);
+    DB_RESPONSE write(String data);
 
-    DB_RESPOND query(String sql);
+    DB_RESPONSE query(String sql);
     //uint8_t createDatabase(char *dbname);
 
   private:
