@@ -1,8 +1,8 @@
 /* Influxdb library
 
-MIT license
-Written by HW Wong
-*/
+   MIT license
+   Written by HW Wong
+ */
 
 #ifndef INFLUXDB_H
 #define INFLUXDB_H
@@ -16,40 +16,40 @@ String URLEncode(String msg);
 
 class FIELD
 {
-  public:
-    FIELD(String m);
+public:
+        FIELD(String m);
 
-    String measurement;
+        String measurement;
 
-    void addField(String key, float value);
-    void addTag(String key, String value);
-    String postString();
-    void empty();
-  private:
-    String _data;
-    String _tag;
+        void addField(String key, float value);
+        void addTag(String key, String value);
+        String postString();
+        void empty();
+private:
+        String _data;
+        String _tag;
 
 };
 
 class Influxdb
 {
-  public:
-    Influxdb(const char* host, uint16_t port);
+public:
+        Influxdb(const char* host, uint16_t port);
 
-    DB_RESPONSE opendb(String db);
-    DB_RESPONSE opendb(String db, String user, String password);
+        DB_RESPONSE opendb(String db);
+        DB_RESPONSE opendb(String db, String user, String password);
 
-    DB_RESPONSE write(FIELD data);
-    DB_RESPONSE write(String data);
+        DB_RESPONSE write(FIELD data);
+        DB_RESPONSE write(String data);
 
-    DB_RESPONSE query(String sql);
-    //uint8_t createDatabase(char *dbname);
+        DB_RESPONSE query(String sql);
+        //uint8_t createDatabase(char *dbname);
 
-  private:
-    WiFiClient _client;
-    uint16_t _port;
-    const char* _host;
-    String _db;
+private:
+        WiFiClient _client;
+        uint16_t _port;
+        const char* _host;
+        String _db;
 
 };
 
