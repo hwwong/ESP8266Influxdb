@@ -9,7 +9,7 @@
 #include "Arduino.h"
 #include <ESP8266WiFi.h>
 
-enum DB_RESPONSE {DB_SUCCESS, DB_ERROR};
+enum DB_RESPONSE {DB_SUCCESS, DB_ERROR, DB_CONNECT_FAILED};
 
 // Url encode function
 String URLEncode(String msg);
@@ -45,11 +45,13 @@ public:
         DB_RESPONSE query(String sql);
         //uint8_t createDatabase(char *dbname);
 
+        DB_RESPONSE response();
 private:
         WiFiClient _client;
         uint16_t _port;
         const char* _host;
         String _db;
+        DB_RESPONSE _response;
 
 };
 
