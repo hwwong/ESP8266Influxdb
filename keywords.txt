@@ -6,18 +6,19 @@
 # Datatypes (KEYWORD1)
 ##################################################
 
-Influxdb	KEYWORD1
-FIELD		KEYWORD1
-DB_RESPOND 	KEYWORD1
+Influxdb	   KEYWORD1
+FIELD		     KEYWORD1
+DB_RESPOND 	 KEYWORD1
 
 ##################################################
 # Methods and Functions (KEYWORD2)
 ##################################################
 
-addField 	KEYWORD2
-addTag	 	KEYWORD2
-empty	 	KEYWORD2
-opendb	 	KEYWORD2
-write	 	KEYWORD2
-query	 	KEYWORD2
+addField 	  KEYWORD2
+addTag	 	  KEYWORD2
+empty	 	    KEYWORD2
+opendb	 	  KEYWORD2
+write	 	    KEYWORD2
+query	 	    KEYWORD2
 postString	KEYWORD2
+response    KEYWORD2

@@ -2,13 +2,16 @@
 #include "ESP8266Influxdb.h"
 #include <ESP8266WiFi.h>
 
-// comment below line to disable debug print
-#define DEBUG_PRINT(a) (Serial.println(a))
-#ifndef DEBUG_PRINT(a)
+//#define DEBUG_PRINT // comment this line to disable debug print
+
+#ifndef DEBUG_PRINT
 #define DEBUG_PRINT(a)
+#else
+#define DEBUG_PRINT(a) (Serial.println(String(F("[Debug]: "))+(a)))
+#define _DEBUG
 #endif
 
-Influxdb::Influxdb(const char *host, uint16_t port) {
+Influxdb::Influxdb(const char *host, uint16_t port) : WiFiClient() {
         _port = port;
         _host = host;
 }
@@ -22,69 +25,104 @@ DB_RESPONSE Influxdb::opendb(String db) {
 }
 
 DB_RESPONSE Influxdb::write(FIELD data) {
-        return this->write(data.postString());
+        return write(data.postString());
 }
 
 DB_RESPONSE Influxdb::write(String data) {
-        if (!_client.connect(_host, _port)) {
+        if (!connect(_host, _port)) {
                 DEBUG_PRINT("connection failed");
                 _response = DB_CONNECT_FAILED;
                 return _response;
         }
         String postHead = "POST /write?" + _db + " HTTP/1.1\r\n";
-        // postHead += "Host: " + _client.localIP().toString() + ":" +
-        // _client.localPort() + "\r\n";
+        // postHead += "Host: " + localIP().toString() + ":" +
+        // localPort() + "\r\n";
         // postHead += "Content-Type: application/x-www-form-urlencoded\r\n";
         postHead += "Content-Length: " + String(data.length()) + "\r\n\r\n";
 
         DEBUG_PRINT("Writing data to " + String(_host) + ":" + String(_port));
-        _client.print(postHead + data);
+        print(postHead + data);
         DEBUG_PRINT(postHead + data);
 
         uint8_t t = 0;
         // Check the reply whether writing is success or not
-        while (!_client.available() && t < 200) {
+        while (!available() && t < 200) {
                 delay(10);
                 t++;
         }
-        if (_client.available()) {
-                _response = (_client.findUntil("204", "\r")) ? DB_SUCCESS : DB_ERROR;
+        if (t==200) {_response = DB_ERROR; return DB_ERROR; } // Return error if time out.
+
+#if !defined _DEBUG
+        if (available()) {
+                _response = (findUntil("204", "\r")) ? DB_SUCCESS : DB_ERROR;
                 return _response;
-        } else
-                _response = DB_ERROR;
+        }
+#else
+        _response=DB_ERROR;
+        while (available()) {
+                String line = readStringUntil('\n');
+                if (line.substring(9,12)=="204")
+                        _response = DB_SUCCESS;
+                DEBUG_PRINT("(Responsed): " + line);
+        }
+        return _response;
+#endif
         return DB_ERROR;
 }
 
 DB_RESPONSE Influxdb::query(String sql) {
 
-        if (!_client.connect(_host, _port)) {
+        if (!connect(_host, _port)) {
                 DEBUG_PRINT("connection failed");
                 _response = DB_CONNECT_FAILED;
                 return _response;
         }
 
-        String url = "/query?pretty=true&" + _db;
+        String url = "/query?";
+#if defined _DEBUG
+        url += "pretty=true&";
+#endif
+        url += _db;
         url += "&q=" + URLEncode(sql);
         DEBUG_PRINT("Requesting URL: ");
         DEBUG_PRINT(url);
 
         // This will send the request to the server
-        _client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + _host +
-                      ":" + _port + "\r\n" + "Connection: close\r\n\r\n");
+        print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + _host +
+              ":" + _port + "\r\n" + "Connection: close\r\n\r\n");
 
         // Read all the lines of the reply from server and print them to Serial
         uint8_t t = 0;
-        while (!_client.available() && t < 200) {
+        while (!available() && t < 200) {
                 delay(10);
                 t++;
         }
+        if (t==200) {_response = DB_ERROR; return DB_ERROR; }  // Return error if time out.
 
-        while (_client.available())
+        DEBUG_PRINT("Receiving....");
+        uint8_t i=0;
+        String line = readStringUntil('\n');
+        DEBUG_PRINT("[HEAD] " + line);
 
-        {
-                String line = _client.readStringUntil('\r');
-                Serial.println(line);
+        if (line.substring(9,12) == "200") {
+                while (available()) {
+                        line = readStringUntil('\n');
+                        DEBUG_PRINT("(HEAD) " + line);
+                        if (i < 6 ) i++; else return _response;
+                }
+                _response = DB_SUCCESS;
         }
+        else{
+                _response = DB_ERROR;
+#if defined _DEBUG
+                while (available()) {
+                        line = readStringUntil('\n');
+                        DEBUG_PRINT("[HEAD] " + line);
+                }
+#endif
+        }
+
+        return _response;
 }
 
 DB_RESPONSE Influxdb::response() {
