@@ -22,6 +22,7 @@ DB_RESPONSE Influxdb::opendb(String db, String user, String password) {
 
 DB_RESPONSE Influxdb::opendb(String db) {
         _db = "db=" + db;
+
 }
 
 DB_RESPONSE Influxdb::write(FIELD data) {

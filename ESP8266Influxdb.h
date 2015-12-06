@@ -59,7 +59,6 @@ public:
         using WiFiClient::setTimeout;
 
 private:
-        WiFiClient _client;
         uint16_t _port;
         const char* _host;
         String _db;
