@@ -36,8 +36,7 @@ DB_RESPONSE Influxdb::write(String data) {
                 return _response;
         }
         String postHead = "POST /write?" + _db + " HTTP/1.1\r\n";
-        // postHead += "Host: " + localIP().toString() + ":" +
-        // localPort() + "\r\n";
+        postHead += "Host: " + String(_host) + ":" + String(_port) + "\r\n";
         // postHead += "Content-Type: application/x-www-form-urlencoded\r\n";
         postHead += "Content-Length: " + String(data.length()) + "\r\n\r\n";
 
@@ -56,6 +55,7 @@ DB_RESPONSE Influxdb::write(String data) {
 #if !defined _DEBUG
         if (available()) {
                 _response = (findUntil("204", "\r")) ? DB_SUCCESS : DB_ERROR;
+		stop(); //Closing connection as pointed out here https://github.com/hwwong/ESP8266Influxdb/issues/1#issue-148991347
                 return _response;
         }
 #else
@@ -66,6 +66,7 @@ DB_RESPONSE Influxdb::write(String data) {
                         _response = DB_SUCCESS;
                 DEBUG_PRINT("(Responsed): " + line);
         }
+	stop(); //Closing connection as pointed out here https://github.com/hwwong/ESP8266Influxdb/issues/1#issue-148991347
         return _response;
 #endif
         return DB_ERROR;
@@ -109,7 +110,13 @@ DB_RESPONSE Influxdb::query(String sql) {
                 while (available()) {
                         line = readStringUntil('\n');
                         DEBUG_PRINT("(HEAD) " + line);
-                        if (i < 6 ) i++; else return _response;
+                        if (i < 6 ) {
+				i++;
+			}
+			else {
+				stop(); //Closing connection as pointed out here https://github.com/hwwong/ESP8266Influxdb/issues/1#issue-148991347
+				return _response;
+			}
                 }
                 _response = DB_SUCCESS;
         }
@@ -122,7 +129,7 @@ DB_RESPONSE Influxdb::query(String sql) {
                 }
 #endif
         }
-
+	stop(); //Closing connection as pointed out here https://github.com/hwwong/ESP8266Influxdb/issues/1#issue-148991347
         return _response;
 }
 
